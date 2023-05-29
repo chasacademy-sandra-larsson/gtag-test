@@ -1,38 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
 
-    <title>Shoppa loss</title>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+
+  <title>Shoppa loss</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-X1HRBHZWCG"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-X1HRBHZWCG');
+  </script>
 
 <body>
-    <div class="navbar">
-        <a href="index.html">
-          <h2>Shoppa loss</h2>
-        </a>
+  <div class="navbar">
+    <a href="index.html">
+      <h2>Shoppa loss</h2>
+    </a>
 
-        <ul class="categories" id="categories">
-            <!-- Generera knappar för varje kategori. Ha även med en knapp för "All categories" -->
-        </ul>
-    
-        <a href="cart.html">
-          <div class="cart">
-            <i class="bi bi-cart2"></i>
-            <!-- Uppdatera aktuellt antal produkter i kundvagnen här -->
-            <div id="cartAmount" class="cartAmount">0</div>
-          </div>
-        </a>
-    
+    <ul class="categories" id="categories">
+      <!-- Generera knappar för varje kategori. Ha även med en knapp för "All categories" -->
+    </ul>
+
+    <a href="cart.html">
+      <div class="cart">
+        <i class="bi bi-cart2"></i>
+        <!-- Uppdatera aktuellt antal produkter i kundvagnen här -->
+        <div id="cartAmount" class="cartAmount">0</div>
       </div>
-    
-      <div class="shop" id="shop">
-        <!-- Generera dynamisk html för alla produkter här -->
-      </div>
-    <script src="./js/data.js"></script>
-    <script src="./js/main.js"></script>
+    </a>
+
+  </div>
+
+  <div class="shop" id="shop">
+    <!-- Generera dynamisk html för alla produkter här -->
+  </div>
+  <script src="./js/data.js"></script>
+  <script src="./js/main.js"></script>
 </body>
+
 </html>
