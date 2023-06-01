@@ -110,6 +110,12 @@ const increment = (id) => {
      
     update(selectedItem)
     localStorage.setItem("data", JSON.stringify(basket));
+      // Custom Event Tracking - Button Click
+      gtag('event', 'button_click', {
+        'event_category': 'interactions on products',
+        'event_label': 'adding products to cart',
+        'value': 1
+      });
 }
 
 
