@@ -1,18 +1,34 @@
+import { fetchData } from './api.js';
+import { loadBasket } from './basket.js';
+import { increment, decrement, calculateBasket, truncateString} from "./utils.js";
+
 const shop = document.getElementById('shop');
 const allCategories = document.getElementById("categories");
-const btnCategory = document.querySelectorAll(".btnCategory");
- 
-let basket = JSON.parse(localStorage.getItem("data")) || [];
 
+let basket = loadBasket();
 
-const generateShop = () => {
+window.addEventListener("DOMContentLoaded", () => {
+  console.log("DOMContentLoaded")
+  loadPageData()
+});
+
+async function loadPageData() {
+  const data = await fetchData('https://fakestoreapi.com/products');
+  console.log("data from main", data);
+  renderShop(basket, data)
+  generateCategories(data)
+  calculateBasket(basket)
+}
+
+const renderShop = (basket, products) => {
     // Generera alla produkter här
+    const renderedProducts = products.map(product => {
 
-    const markup = shopData.map(product => {
-        let {id, title, description, image, price, category} = product;
-        let category_cleaned = category.replaceAll("'", "")
-        description = truncateString(description, 40)
-        let search = basket.find((item) => item.id === id) || [];
+        const {id, title, description, image, price, category} = product;
+        const category_cleaned = category.replaceAll("'", "")
+        truncateString(description, 40)
+        const search = basket.find((item) => item.id === id) || [];
+
         return `
         <article id=product-id-${id} class="item" data="${category_cleaned}">
           <img width="220" src=${image} alt="">
@@ -22,26 +38,47 @@ const generateShop = () => {
             <div class="price-quantity">
               <h2>$ ${price} </h2>
               <div class="buttons">
-                <i onclick="decrement(${id})" class="bi bi-dash-lg"></i>
+                <i class="bi bi-dash-lg"></i>
                 <div id=${id} class="quantity">${
                     search.item === undefined ? 0 : search.item
                   }
                 </div>
-                <i onclick="increment(${id})" class="bi bi-plus-lg"></i>
+                <i class="bi bi-plus-lg"></i>
               </div>
             </div>
           </div>
           </article>`;
     }).join("")
 
-    shop.innerHTML = markup
+    shop.innerHTML = renderedProducts
+    attachEventListeners()
+
 }
 
-generateShop()
 
-const getCategories = () => {
+function attachEventListeners() {
+  // Select all increment buttons and attach event listeners
+  const incrementButtons = shop.querySelectorAll('.bi.bi-plus-lg');
+  incrementButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
+          const id = Number(event.currentTarget.closest('.item').getAttribute('id').replace('product-id-', ''));
+          increment(basket, id);
+      });
+  });
 
-    const allCategories = shopData.reduce((arr, item) => {
+  // Select all decrement buttons and attach event listeners
+  const decrementButtons = shop.querySelectorAll('.bi.bi-dash-lg');
+  decrementButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
+          const id = Number(event.currentTarget.closest('.item').getAttribute('id').replace('product-id-', ''));
+          decrement(basket, id);
+      });
+  });
+}
+
+function getCategories(data) {
+
+    const allCategories = data.reduce((arr, item) => {
           let  {category}  = item
           category = category.replaceAll("'", "")
           if(!arr.includes(category))
@@ -52,7 +89,7 @@ const getCategories = () => {
     return allCategories
 }
 
-const filterProducts = (event) => {
+function filterProducts(event) {
 
   const category = event.target.innerText
 
@@ -68,8 +105,8 @@ const filterProducts = (event) => {
 
 }
 
-const generateCategories = () => {
-    const categories = getCategories(shopData)
+function generateCategories(products) {
+    const categories = getCategories(products)
     console.log(categories)
     const markup = categories.map((category) => {
        return `<div class="categories">
@@ -87,77 +124,3 @@ const generateCategories = () => {
    
 }
 
-generateCategories()
-
-
-const increment = (id) => {
-    // Om användaren klickar på + på produkten 
-    //    - antalet inkrementeras med 1 i objektet för vald produkt
-    //    - kundvagnen uppdateras
-    let selectedItem = id;
-
-    let search = basket.find(item => item.id === selectedItem)
-    if(search === undefined) {
-        basket.push({
-            id: selectedItem,
-            total: 1
-        })
-    }
-    else {
-        search.total += 1
-    }
-    console.log("basket", basket)
-     
-    update(selectedItem)
-    localStorage.setItem("data", JSON.stringify(basket));
-      // Custom Event Tracking - Button Click
-      gtag('event', 'button_click', {
-        'event_category': 'interactions on products',
-        'event_label': 'adding products to cart',
-        'value': 1
-      });
-}
-
-
-let decrement = (id) => {
-    console.log("decrement")
-    let selectedItem = id;
-    let search = basket.find((x) => x.id === selectedItem.id);
-  
-    if (search === undefined) return;
-    else if (search.total === 0) return;
-    else {
-      search.item -= 1;
-    }
-  
-    update(selectedItem.id);
-    basket = basket.filter((x) => x.total !== 0);
-    console.log(basket);
-    localStorage.setItem("data", JSON.stringify(basket));
-  };
-
-  
-let update = (id) => {
-    let search = basket.find((item) => item.id === id)
-    document.getElementById(id).innerHTML = search.total   
-    calculation()
-}
-
-let calculation = () => {
-    let cartIcon = document.getElementById("cartAmount")
-    const basketItems = basket.map(basketItem => basketItem.total)
-    const basketTotal = basketItems.reduce((acc, item) => acc + item, 0)
-    cartIcon.innerHTML = basketTotal
- }
-
- calculation()
-
- function truncateString(str, num) {
-  // If the length of str is less than or equal to num
-  // just return str--don't truncate it.
-  if (str.length <= num) {
-    return str
-  }
-  // Return str truncated with '...' concatenated to the end of str.
-  return str.slice(0, num) + '...'
-}

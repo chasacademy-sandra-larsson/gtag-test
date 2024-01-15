@@ -1,21 +1,35 @@
-let shoppingCart = document.getElementById("shopping-cart")
-let label = document.querySelector(".label")
-let basket = JSON.parse(localStorage.getItem("data")) || []
+import { fetchData } from './api.js';
+import { loadBasket } from './basket.js';
+import {increment, decrement, calculateTotalAmount} from "./utils.js";
 
-console.log("basket", basket)
+const shoppingCart = document.getElementById("shopping-cart")
+const label = document.querySelector(".label")
 
-shopData.forEach(element => {
-  console.log(element.price)
-})
+let basket = loadBasket();
 
-let generateCartItems = () => {
+window.addEventListener("DOMContentLoaded", () => {
+  loadPageData();
+
+});
+
+
+async function loadPageData() {
+  const data = await fetchData('https://fakestoreapi.com/products');
+
+  console.log("data from cart", data);
+  generateCartItems(basket, data);
+  const totalAmount = calculateTotalAmount(basket, data);
+  updateTotalAmountDisplay(totalAmount);
+}
+
+
+const generateCartItems = (basket, data) => {
     if(basket.length !== 0){
         shoppingCart.innerHTML = basket.map(item => {
-            let {id, total} = item
-            let search = shopData.find((item) => item.id === id) || []
-            let {image, price, title} = search
+            const {id, total} = item
+            const search = data.find((item) => item.id === id) || []
+            const{image, price, title} = search
             return `
-
             <div class="cart-item">
             <img width="100" src=${image} alt="" />
     
@@ -26,14 +40,14 @@ let generateCartItems = () => {
                   <p>${title}</p>
                   <p class="cart-item-price">$ ${price}</p>
                 </h4>
-                <i onclick="removeItem(${id})" class="bi bi-x-lg"></i>
+                <i class="bi bi-x-lg"></i>
               </div>
     
               <div class="cart-buttons">
                 <div class="buttons">
-                  <i onclick="decrement(${id})" class="bi bi-dash-lg"></i>
+                  <i class="bi bi-dash-lg"></i>
                   <div id=${id} class="quantity">${total}</div>
-                  <i onclick="increment(${id})" class="bi bi-plus-lg"></i>
+                  <i class="bi bi-plus-lg"></i>
                 </div>
               </div>
     
@@ -50,97 +64,63 @@ let generateCartItems = () => {
         <h2>Cart is Empty</h2>
         `;
     }
+    attachListeners();
+  }
+    function attachListeners() {
+      const incrementButtons = document.querySelectorAll('.bi.bi-plus-lg');
+      incrementButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+          const id = Number(event.currentTarget.closest('.cart-item').querySelector('.quantity').id);
+          increment(basket, id);
+        });
+      });
+    
+      const decrementButtons = document.querySelectorAll('.bi.bi-dash-lg');
+      decrementButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+          const id = Number(event.currentTarget.closest('.cart-item').querySelector('.quantity').id);
+          decrement(basket, id);
+        });
+      });
+    
+      const removeItemButtons = document.querySelectorAll('.bi.bi-x-lg');
+      removeItemButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+          const id = Number(event.currentTarget.closest('.cart-item').querySelector('.quantity').id);
+          removeItem(basket, id);
+        });
+      });
+    }
+
+ function updateTotalAmountDisplay(amount) {
+  label.innerHTML = amount > 0 ? `
+    <h2>Total Bill : $ ${amount}</h2>
+    <button id="clearCartButton" class="removeAll">Clear Cart</button>
+  ` : '<h2>Cart is Empty</h2>';
+  
+  const clearCartButton = document.getElementById("clearCartButton");
+  if (clearCartButton) {
+    clearCartButton.addEventListener('click', clearCart);
+  }
 }
 
-generateCartItems();
+ function clearCart(basket) {
+  basket = []; // Clear the basket array
+  generateCartItems(basket); // Regenerate the cart items, which should now be empty
+  updateTotalAmountDisplay(0); // Update the total amount display to 0
+  localStorage.setItem("data", JSON.stringify(basket)); // Update the local storage
+}
 
-let increment = (id) => {
-    let selectedItem = id;
-    let search = basket.find((x) => x.id === selectedItem.id);
-  
-    if (search === undefined) {
-      basket.push({
-        id: selectedItem.id,
-        item: 1,
-      });
-    } else {
-      search.item += 1;
-    }
-  
-    generateCartItems();
-    update(selectedItem.id);
-    localStorage.setItem("data", JSON.stringify(basket));
-  };
+function removeItem(basket, id) {
+
+  basket = basket.filter((item) => item.id !== id);
+  const totalAmount = calculateTotalAmount(basket);
+  generateCartItems(basket);
+  updateTotalAmountDisplay(totalAmount);
+
+  localStorage.setItem("data", JSON.stringify(basket));
+}
 
 
 
-let decrement = (id) => {
-    let selectedItem = id;
-    let search = basket.find((x) => x.id === selectedItem.id);
-  
-    if (search === undefined) return;
-    else if (search.item === 0) return;
-    else {
-      search.item -= 1;
-    }
-  
-    update(selectedItem.id);
-    basket = basket.filter((x) => x.item !== 0);
-    generateCartItems();
-    localStorage.setItem("data", JSON.stringify(basket));
-  };
-
-  function update(id)  {
-    let search = basket.find((x) => x.id === id);
-    document.getElementById(id).innerHTML = search.item;
-    calculation();
-    totalAmount();
-  };
-  
-
-let removeItem = (id) => {
-    let selectedItem = id;
-    basket = basket.filter((x) => x.id !== selectedItem.id);
-    calculation();
-    generateCartItems();
-    totalAmount();
-    localStorage.setItem("data", JSON.stringify(basket));
-  };
-  
-
-  let totalAmount = () => {
-    if (basket.length !== 0) {
-      let amount = basket
-        .map((x) => {
-          let { id, total } = x;
-          let filterData = shopData.find((x) => x.id === id);
-          console.log("test", typeof filterData.price)
-          console.log("total", total)
-          return filterData.price * total;
-        })
-        .reduce((x, y) => x + y, 0);
-  
-      return (label.innerHTML = `
-      <h2>Total Bill : $ ${amount}</h2>
-      <button onclick="clearCart()" class="removeAll">Clear Cart</button>
-      `);
-    } else return;
-  };
-  
-  totalAmount();
-
-  let clearCart = () => {
-    basket = [];
-    generateCartItems();
-    calculation();
-    localStorage.setItem("data", JSON.stringify(basket));
-  };
-  
-
-function calculation () {
-    let cartIcon = document.getElementById("cartAmount");
-    cartIcon.innerHTML = basket.map((x) => x.total).reduce((x, y) => x + y, 0);
-  };
-  
-  calculation();
   
