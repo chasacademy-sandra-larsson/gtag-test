@@ -33,7 +33,8 @@ export function updateItemQuantity(basket, id, increment = true) {
     gtag('event', 'button_click', {
         'event_category': 'interactions on products',
         'event_label': 'adding products to cart',
-        'value': 1
+        'value': 1,
+        'debug_mode': true
       });
     updateItemQuantity(basket, id, true);
   }
